@@ -55,7 +55,7 @@ async function start(fields, cozyParameters) {
     // this is a bank identifier which will be used to link bills to bank operations. These
     // identifiers should be at least a word found in the title of a bank operation related to this
     // bill. It is not case sensitive.
-    identifiers: ['cageots'],
+    identifiers: ['Les P Tits Cag'],
     // sourceAccount given to saveBills and saveFiles
     sourceAccount: fields.login,
     // deduplication keys used for file deduplication
