@@ -30,11 +30,14 @@ const baseUrl = 'https://www.lesptitscageots.fr'
 module.exports = new BaseKonnector(start)
 
 
-// The start function is run by the BaseKonnector instance only when it got all
-// the account information (fields). When you run this connector yourself in
-// "standalone" mode or "dev" mode, the account information come from
-// ./konnector-dev-config.json file cozyParameters are static parameters,
-// independents from the account. Most often, it can be a secret api key.
+/**
+ * The start function is run by the BaseKonnector instance only when it got all
+ * the account information (fields).
+ * @param {object} fields: When you run this connector yourself in "standalone" mode
+ * or "dev" mode, the account information come from ./konnector-dev-config.json file.
+ * @param {object} cozyParameters: static parameters, independents from the account.
+ * Most often, it can be a secret api key.
+*/
 async function start(fields, cozyParameters) {
 
   log('info', 'Authenticating ...')
@@ -42,7 +45,6 @@ async function start(fields, cozyParameters) {
   await authenticate.bind(this)(fields.login, fields.password)
   log('info', 'Successfully logged in')
 
-  // The BaseKonnector instance expects a Promise as return of the function
   log('info', 'Fetching the list of documents')
   const $ = await request(`${baseUrl}/historique-des-commandes`)
 
@@ -67,6 +69,7 @@ async function start(fields, cozyParameters) {
 
 // authentification using the website form
 function authenticate(username, password) {
+
   return this.signin({
 
     // <form action="https://www.lesptitscageots.fr/authentification" method="post" id="login_form" class="box">
@@ -78,16 +81,16 @@ function authenticate(username, password) {
     // <input ... type="hidden" name="back" value="" />
     // <button ... type="submit" name="SubmitLogin"></button>
     formData: {
-        email: username,
-        passwd: password,
-        back: '',
-        SubmitLogin: ''
+      email: username,
+      passwd: password,
+      back: '',
+      SubmitLogin: ''
     },
 
     // The validate function will check if the login request was a success.
     // As lesptitscageots.fr returns a statucode=200 even if the authentification
     // goes wrong, we need to check the message returned on the webpage.
-    validate: (statusCode, $, fullResponse) => {
+    validate: (statusCode, $) => {
       const errorMsg1 = `Adresse e-mail requise`
       const errorMsg2 = `Adresse e-mail invalide`
       const errorMsg3 = `Mot de passe requis`
@@ -118,14 +121,15 @@ function authenticate(username, password) {
   })
 }
 
+
 // The goal of this function is to parse a HTML page wrapped by a cheerio instance
 // and return an array of JS objects which will be saved to the cozy by saveBills
 // (https://github.com/konnectors/libs/blob/master/packages/cozy-konnector-libs/docs/api.md#savebills)
 // cheerio (https://cheerio.js.org/) uses the same api as jQuery (http://jquery.com/)
 function parseDocuments($) {
+
   // You can find documentation about the scrape function here:
   // https://github.com/konnectors/libs/blob/master/packages/cozy-konnector-libs/docs/api.md#scrape
-
   const docs = scrape(
     $,
     {
@@ -148,8 +152,8 @@ function parseDocuments($) {
       vendorRef: {
         sel: 'td.history_link a'
       },
-      // The order status: can be "Commande traitée" or "Erreur de paiement"
-      // used later to filter only on "Commande traitée" (the only ones with an invoice)
+      // The order status
+      // It can be "Commande acceptée", "Commande traitée" or "Erreur de paiement"
       // <td class="history_state"><span>Commande traitée</span></td>
       orderStatus: {
         sel: 'td.history_state span',
@@ -168,8 +172,10 @@ function parseDocuments($) {
   )
 
   return docs
-    // on ne retourne que les commandes traitées (pas celles annulée et sans facture)
-    .filter(doc => doc.orderStatus === 'Commande traitée')
+    // on filtre sur les commandes passées ou traitées
+    // car les commandes annulées n'ont pas de facture.
+    .filter(doc => doc.orderStatus === 'Commande passée'
+                || doc.orderStatus === 'Commande traitée')
 
     // et on rajoute pour chacune les valeurs ci-dessous :
     .map(doc => ({
@@ -180,20 +186,45 @@ function parseDocuments($) {
       fileAttributes: {
         metadata: {
           carbonCopy: true,
-          classification: 'invoicing',
+          classification: {
+            label: 'food_invoice',
+            purpose: 'invoice',
+            sourceCategory: 'shopping'
+          },
+          datetime: utils.formatDate(doc.date),
+          datetimeLabel: 'issueDate',
           contentAuthor: VENDOR,
-          issueDate: doc.date
+          issueDate: utils.formatDate(doc.date)
         }
       }
     }))
 
 }
 
+
+/**
+ * Converts a string formatted date (YYYYMMDDHHMMSS) into a JavaScript Date object.
+ * @param {string} date
+ * @returns {object Date}
+*/
 function normalizeDate(date) {
-  //javascript counts mounths from 0 to 11 !
-  return new Date(date.substring(0,4), date.substring(4,6) - 1, date.substring(6,8))
+  return new Date(
+    date.substring(0,4),      // year
+    date.substring(4,6) - 1,  // month (javascript counts mounths from 0 to 11 !)
+    date.substring(6,8),      // day
+    date.substring(8,10),     // hour
+    date.substring(10,12),    // minute
+    date.substring(12,14)     // second
+  )
 }
 
+
+/**
+ * Formats the filename of the invoice based on its properties, such as:
+ * 2021-01-01_les_ptits_cageots_facture_99.99EUR_ABCDEFJHI.pdf
+ * @param {object} doc
+ * @returns {string}
+*/
 function formatFilename(doc) {
   return `${utils.formatDate(doc.date)}_les_ptits_cageots_facture_${doc.amount.toFixed(2)}EUR_${doc.vendorRef}.pdf`
 }
