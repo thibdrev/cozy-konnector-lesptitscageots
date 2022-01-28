@@ -1130,7 +1130,7 @@ cozy-app-publish@0.27.2:
     request "^2.88.0"
     tar "^4.4.13"
 
-cozy-app-publish@^0.28.1:
+cozy-app-publish@0.28.1:
   version "0.28.1"
   resolved "https://registry.yarnpkg.com/cozy-app-publish/-/cozy-app-publish-0.28.1.tgz#ffc3f2cb6310cf4e9d2328d1ac9301327fac6387"
   integrity sha512-Mq7teCMDAC9JUgv8QyfS8UPSEWyQtn0uWo1FZNh/C96FJo3hph+F1KTYiAGFrBv6xg7ZtkhLVnFanLXvhkAqFg==
