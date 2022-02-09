@@ -6,8 +6,8 @@
   "language": "node",
   "icon": "icon.svg",
   "slug": "lesptitscageots",
-  "source": "https://github.com/konnectors/cozy-konnector-lesptitscageots.git",
-  "editor": "Cozy",
+  "source": "https://github.com/konnectors/lesptitscageots.git",
+  "editor": "thibdrev",
   "vendor_link": "https://lesptitscageots.fr",
   "frequency": "weekly",
   "categories": [
