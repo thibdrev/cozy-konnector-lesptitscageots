@@ -4,7 +4,7 @@
   "description": "Cozy Konnector for Les P'tits Cageots",
   "repository": {
     "type": "git",
-    "url": "https://github.com/konnectors/lesptitscageots.git"
+    "url": "git:github.com:konnectors/lesptitscageots.git"
   },
   "keywords": [],
   "author": "Cozy Cloud",

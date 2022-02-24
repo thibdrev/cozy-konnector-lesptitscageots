@@ -6,7 +6,7 @@
   "language": "node",
   "icon": "icon.svg",
   "slug": "lesptitscageots",
-  "source": "https://github.com/konnectors/lesptitscageots.git",
+  "source": "git@github.com:konnectors/lesptitscageots.git",
   "editor": "thibdrev",
   "vendor_link": "https://lesptitscageots.fr",
   "frequency": "weekly",
