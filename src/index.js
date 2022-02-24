@@ -1,3 +1,7 @@
+process.env.SENTRY_DSN =
+  process.env.SENTRY_DSN ||
+  'https://d8f2783ddca0411497454da604197360@errors.cozycloud.cc/31'
+
 const {
   BaseKonnector,
   requestFactory,
