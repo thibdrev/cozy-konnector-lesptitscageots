@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "name": "P'tits Cageots",
+  "name": "Les Ptits Cageots",
   "name_prefix": "Les",
   "type": "konnector",
   "language": "node",
