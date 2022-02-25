@@ -1,0 +1,39 @@
+language: node_js
+node_js:
+- 12.22.9
+env:
+  global:
+  - MATTERMOST_CHANNEL=publication
+  - secure: EIK3Nv5r/4kfYc0/YIY8s2M8+vve80aU6SMjVon7WLn0l4nHSB8EFq0bap2NK5/pNJPtjLMmNpvlOHiK3HbKIeKemriCAB5uj9q3PJdeRt8ekN+ioqtW5TxcZTIvHfnk5KC3VCRsS8ZWMnkaWE3zdwX4fRsWp7e4eDYo8j3Ua/fWNA0/FlWDgYjiB8CDzY8yfMKZD85gAyPhxJU+9+lrAxSHD3EfW7MsmG5j9C4jNgmyw52vw0L4lRcpJKjB/jD+wX9MUKAtzqbvlkuHsD3In0/TGlNAE4LYd0NPG3A8siQ8bPbx2SSKbn5JAIiKIpoJprrSJlGXqJkNFhfQ+8DPcO/tvLhYhEz8OgIb8oNvtPAmBoPIRYU/U562JJydHq0fs4oxmmzJydqebm/aIsuJ4rk6d3j0zdJsjxzlEctr3O808bQK37dM87nDs2QIlGiAYIS3YOGc7QTQCpzxm0Qjxj7uVVeu3ENmkqqzQoJx3JrkrNCu5rKUaaLjTEZT9Ak1yzZ3Y6UQzBq7AR17nt/c9ot1hP4Ob8sFUxXJZfPHz3dynf34HcL91dzOdBFzGts6qmXBsEIrF3SRCLmBJUofSaqiIBHDSrpoNSjvUb3xLzfGzAeIXZs5triM1YW+HwW0BANh5aFn2uAucPY3aAnBEJPFB7E/jpRkhpYPStAwdMM=
+  - secure: vil+MADjsYxrn85+vx1pbiJLLEE+Wm8wWujfE9ZJcL0zom1UqAeq0+Kq8+eBAzXXewvNEzeRGtLp49Lv9uz40q7XsLl3FFNJdi+U1e8BuITsczRM4FI8OK72t6V1lRM+UKfp+6uhc7AjaQMcAsKEy+BwnyfGNfbpbOxUYsemguuRmvZy6ygFjSF8l9Tl/Iqa54G+tj396TKB8Kr5EQk8UtrBm9xzSY2i0v1wNwiw21u9n17HMw0y7gOg83LfabRBg7GlxRu7wARYOY/CsdlaHb7ZMupCAU0FIre3LFfDJHDq7JaXA1GBgqsxXyZakPvJVOksJ/k9cekWTHKfeG+42ZSBKFlxP8vvtJd9qUJVFD4w37e8rMaa9qade2CYfph6PXG0zq4DFmwGSv7kXxFCnrwrWxQKcyoWz2+WuJarxgsNJEGhB4N7PDr9lt3/8C51x824jUcThGsz/a5X9QQrywjrs0UZbVsqUzU7XMDmBr1aIT1ix9oSeC9n4ioM1GhBR2ykzpoucMLK7fBIvKgNMVDZZ83cIiqH+5jR/Eo+80Ga8FbnGHONoP5RXOJkeh2Gis/vrNu/DBsHDrfytzlGMWWwmaJeJQ6hL51gLzG7juARi5G9VhUG7MwISCBurMq5hHvuO/lNlkjuxBLINH9JfKSbu2j8qN7MXLmn6EOXBaM=
+cache:
+  yarn: true
+  directories:
+  - node_modules
+branches:
+  except:
+  - build
+  - build-debug
+script:
+- yarn lint
+- yarn build
+deploy:
+- provider: script
+  skip-cleanup: true
+  script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish
+  on:
+    branch: master
+- provider: script
+  skip-cleanup: true
+  script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish --postpublish mattermost
+  on:
+    tags: true
+before_install:
+- openssl aes-256-cbc -K $encrypted_8ebb1ef83f64_key -iv $encrypted_8ebb1ef83f64_iv
+  -in github_deploy_key.enc -out /tmp/github_deploy_key -d
+- eval "$(ssh-agent -s)"
+- chmod 600 /tmp/github_deploy_key
+- ssh-add /tmp/github_deploy_key
+after_deploy:
+- rm /tmp/github_deploy_key
+- ssh-add -D
