@@ -99,7 +99,7 @@
       }
     }
   },
-  "qualification_labels: [
+  "qualification_labels": [
     "grocery_invoice"
   ],
   "features": [
