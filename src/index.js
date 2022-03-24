@@ -8,6 +8,7 @@ const {
   scrape,
   log,
   utils,
+  cozyClient
 } = require('cozy-konnector-libs')
 
 const request = requestFactory({
@@ -35,7 +36,6 @@ const { Qualification } = models.document
 
 module.exports = new BaseKonnector(start)
 
-
 /**
  * The start function is run by the BaseKonnector instance only when it got all
  * the account information (fields).
@@ -43,9 +43,8 @@ module.exports = new BaseKonnector(start)
  * or "dev" mode, the account information come from ./konnector-dev-config.json file.
  * @param {object} cozyParameters: static parameters, independents from the account.
  * Most often, it can be a secret api key.
-*/
+ */
 async function start(fields, cozyParameters) {
-
   log('info', 'Authenticating ...')
   if (cozyParameters) log('debug', 'Found COZY_PARAMETERS')
   await authenticate.bind(this)(fields.login, fields.password)
@@ -69,15 +68,11 @@ async function start(fields, cozyParameters) {
     // deduplication keys used for file deduplication
     keys: ['vendorRef', 'date', 'amount']
   })
-
 }
-
 
 // authentification using the website form
 function authenticate(username, password) {
-
   return this.signin({
-
     // <form action="https://www.lesptitscageots.fr/authentification" method="post" id="login_form" class="box">
     url: `${baseUrl}/authentification`,
     formSelector: 'form#login_form',
@@ -101,7 +96,7 @@ function authenticate(username, password) {
       const errorMsg2 = `Adresse e-mail invalide`
       const errorMsg3 = `Mot de passe requis`
       const errorMsg4 = `mot de passe non valable`
-      const errorMsg5 = `&Eacute;chec d&#039;authentification` //Échec d'authentification
+      const errorMsg5 = `&Eacute;chec d&#039;authentification` // Échec d'authentification
       if ($.html().includes(`Bienvenue sur votre page d'accueil.`)) {
         return true
       } else if ($.html().includes(errorMsg1)) {
@@ -120,20 +115,18 @@ function authenticate(username, password) {
         log('error', errorMsg5)
         return false
       } else {
-        log('error', "erreur inconnue")
+        log('error', 'erreur inconnue')
         return false
       }
     }
   })
 }
 
-
 // The goal of this function is to parse a HTML page wrapped by a cheerio instance
 // and return an array of JS objects which will be saved to the cozy by saveBills
 // (https://github.com/konnectors/libs/blob/master/packages/cozy-konnector-libs/docs/api.md#savebills)
 // cheerio (https://cheerio.js.org/) uses the same api as jQuery (http://jquery.com/)
 function parseDocuments($) {
-
   // You can find documentation about the scrape function here:
   // https://github.com/konnectors/libs/blob/master/packages/cozy-konnector-libs/docs/api.md#scrape
   const docs = scrape(
@@ -162,14 +155,14 @@ function parseDocuments($) {
       // It can be "Commande acceptée", "Commande traitée" or "Erreur de paiement"
       // <td class="history_state"><span>Commande traitée</span></td>
       orderStatus: {
-        sel: 'td.history_state span',
+        sel: 'td.history_state span'
       },
       // The invoice url
       // <td class="history_invoice"><a href="https://www.lesptitscageots.fr/index.php?controller=pdf-invoice&amp;id_order=129403"></a>
       fileurl: {
         sel: 'td.history_invoice a',
         attr: 'href'
-      },
+      }
     },
     // <table id="order-list" class="table table-bordered footab">
     //   <tbody>
@@ -177,56 +170,60 @@ function parseDocuments($) {
     'table#order-list tbody tr'
   )
 
-  return docs
-    // on filtre sur les commandes passées ou traitées
-    // car les commandes annulées n'ont pas de facture.
-    .filter(doc => doc.orderStatus === 'Commande passée'
-                || doc.orderStatus === 'Commande traitée')
+  return (
+    docs
+      // on filtre sur les commandes passées ou traitées
+      // car les commandes annulées n'ont pas de facture.
+      .filter(
+        doc =>
+          doc.orderStatus === 'Commande passée' ||
+          doc.orderStatus === 'Commande traitée'
+      )
 
-    // et on rajoute pour chacune les valeurs ci-dessous :
-    .map(doc => ({
-      ...doc,
-      vendor: VENDOR,
-      currency: 'EUR',
-      filename: formatFilename(doc),
-      fileAttributes: {
-        metadata: {
-          carbonCopy: true,
-          qualification: Qualification.getByLabel('grocery_invoice')
-          datetime: utils.formatDate(doc.date),
-          datetimeLabel: 'issueDate',
-          contentAuthor: VENDOR,
-          issueDate: utils.formatDate(doc.date)
+      // et on rajoute pour chacune les valeurs ci-dessous :
+      .map(doc => ({
+        ...doc,
+        vendor: VENDOR,
+        currency: 'EUR',
+        filename: formatFilename(doc),
+        fileAttributes: {
+          metadata: {
+            carbonCopy: true,
+            qualification: Qualification.getByLabel('grocery_invoice'),
+            datetime: utils.formatDate(doc.date),
+            datetimeLabel: 'issueDate',
+            contentAuthor: VENDOR,
+            issueDate: utils.formatDate(doc.date)
+          }
         }
-      }
-    }))
-
+      }))
+  )
 }
-
 
 /**
  * Converts a string formatted date (YYYYMMDDHHMMSS) into a JavaScript Date object.
  * @param {string} date
  * @returns {object Date}
-*/
+ */
 function normalizeDate(date) {
   return new Date(
-    date.substring(0,4),      // year
-    date.substring(4,6) - 1,  // month (javascript counts mounths from 0 to 11 !)
-    date.substring(6,8),      // day
-    date.substring(8,10),     // hour
-    date.substring(10,12),    // minute
-    date.substring(12,14)     // second
+    date.substring(0, 4), // year
+    date.substring(4, 6) - 1, // month (javascript counts mounths from 0 to 11 !)
+    date.substring(6, 8), // day
+    date.substring(8, 10), // hour
+    date.substring(10, 12), // minute
+    date.substring(12, 14) // second
   )
 }
-
 
 /**
  * Formats the filename of the invoice based on its properties, such as:
  * 2021-01-01_les_ptits_cageots_facture_99.99EUR_ABCDEFJHI.pdf
  * @param {object} doc
  * @returns {string}
-*/
+ */
 function formatFilename(doc) {
-  return `${utils.formatDate(doc.date)}_les_ptits_cageots_facture_${doc.amount.toFixed(2)}EUR_${doc.vendorRef}.pdf`
+  return `${utils.formatDate(
+    doc.date
+  )}_les_ptits_cageots_facture_${doc.amount.toFixed(2)}EUR_${doc.vendorRef}.pdf`
 }
