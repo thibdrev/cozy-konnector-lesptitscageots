@@ -29,6 +29,10 @@ const request = requestFactory({
 const VENDOR = 'Les ptits cageots'
 const baseUrl = 'https://www.lesptitscageots.fr'
 
+// Importing models to get qualification by label
+const models = cozyClient.new.models
+const { Qualification } = models.document
+
 module.exports = new BaseKonnector(start)
 
 
@@ -188,11 +192,7 @@ function parseDocuments($) {
       fileAttributes: {
         metadata: {
           carbonCopy: true,
-          classification: {
-            label: 'food_invoice',
-            purpose: 'invoice',
-            sourceCategory: 'shopping'
-          },
+          qualification: Qualification.getByLabel('grocery_invoice')
           datetime: utils.formatDate(doc.date),
           datetimeLabel: 'issueDate',
           contentAuthor: VENDOR,

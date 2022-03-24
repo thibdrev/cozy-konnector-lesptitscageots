@@ -99,10 +99,13 @@
       }
     }
   },
-
+  "qualification_labels: [
+    "grocery_invoice"
+  ],
   "features": [
     "METADATA_DEDUP",
-    "CARBON_COPY"
+    "CARBON_COPY",
+    "DOC_QUALIFICATION_V2"
   ],
 
   "banksTransactionRegExp": "(Les P Tits Cag|N\\.\\d{7})",
