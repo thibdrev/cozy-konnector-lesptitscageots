@@ -1,6 +1,7 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Les Ptits Cageots",
+  "name_prefix": "Les",
   "type": "konnector",
   "language": "node",
   "icon": "icon.svg",
@@ -54,7 +55,10 @@
     "name": "Cozy Cloud",
     "url": "https://cozy.io"
   },
-  "langs": ["fr", "en"],
+  "langs": [
+    "fr",
+    "en"
+  ],
   "locales": {
     "fr": {
       "short_description": "Récupère dans votre Cozy vos factures",
@@ -99,15 +103,10 @@
       }
     }
   },
-  "qualification_labels": [
-    "grocery_invoice"
-  ],
   "features": [
     "METADATA_DEDUP",
-    "CARBON_COPY",
-    "DOC_QUALIFICATION_V2"
+    "CARBON_COPY"
   ],
-
   "banksTransactionRegExp": "(Les P Tits Cag|N\\.\\d{7})",
   "manifest_version": "2"
 }
